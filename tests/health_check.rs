@@ -1,4 +1,6 @@
+use sqlx::{Connection, PgConnection};
 use std::net::TcpListener;
+use zero2prod::configuration::get_configuration;
 use zero2prod::startup::run;
 
 fn spawn_app() -> String {
@@ -34,6 +36,12 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     //Arrange
     let app_address = spawn_app();
     let client = reqwest::Client::new();
+    let configuration = get_configuration().expect("failed to get configuration");
+    let connection_string = configuration.database.connection_string();
+
+    let connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("failed to connect to postgress");
 
     //Act
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
