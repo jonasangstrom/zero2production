@@ -1,5 +1,6 @@
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
+use log;
 use serde;
 use sqlx;
 use sqlx::PgPool;
@@ -12,6 +13,13 @@ pub struct FormData {
 }
 
 pub async fn subscribe(form: web::Form<FormData>, db_pool: web::Data<PgPool>) -> HttpResponse {
+    let request_id = Uuid::new_v4();
+    log::info!(
+        "{} Saving new user {} {} to database.",
+        request_id,
+        form.name,
+        form.email
+    );
     let result = sqlx::query!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -24,9 +32,12 @@ pub async fn subscribe(form: web::Form<FormData>, db_pool: web::Data<PgPool>) ->
     )
     .execute(db_pool.get_ref());
     match result.await {
-        Ok(_) => HttpResponse::Ok().finish(),
+        Ok(_) => {
+            log::info!("{} Added new user to database. =D", request_id);
+            HttpResponse::Ok().finish()
+        }
         Err(e) => {
-            println!("Failed to execute query: {}", e);
+            log::error!("{} Failed to execute query: {:?}", request_id, e);
             HttpResponse::InternalServerError().finish()
         }
     }
