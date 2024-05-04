@@ -4,6 +4,7 @@ use serde;
 use sqlx;
 use sqlx::PgPool;
 use tracing;
+use tracing::Instrument;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
@@ -21,6 +22,7 @@ pub async fn subscribe(form: web::Form<FormData>, db_pool: web::Data<PgPool>) ->
         subscriber_email = form.email
     );
     let _request_span_guard = tracing_span.enter();
+    let query_span = tracing::info_span!("Saving new subscriber in database.");
     let result = sqlx::query!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -32,7 +34,7 @@ pub async fn subscribe(form: web::Form<FormData>, db_pool: web::Data<PgPool>) ->
         Utc::now()
     )
     .execute(db_pool.get_ref());
-    match result.await {
+    match result.instrument(query_span).await {
         Ok(_) => {
             tracing::info!("{} Added new user to database. =D", request_id);
             HttpResponse::Ok().finish()
