@@ -4,6 +4,7 @@ use serde;
 use sqlx;
 use sqlx::PgPool;
 use tracing;
+use unicode_segmentation::UnicodeSegmentation;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
@@ -21,6 +22,9 @@ subscriber_name = %form.name
 )
 )]
 pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
+    if is_valid_name(&form.name) != true {
+        return HttpResponse::BadRequest().finish();
+    }
     match insert_subscriber(&pool, &form).await {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
@@ -34,9 +38,9 @@ pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Ht
 pub async fn insert_subscriber(pool: &PgPool, form: &FormData) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
-INSERT INTO subscriptions (id, email, name, subscribed_at)
-VALUES ($1, $2, $3, $4)
-"#,
+        INSERT INTO subscriptions (id, email, name, subscribed_at)
+        VALUES ($1, $2, $3, $4)
+        "#,
         Uuid::new_v4(),
         form.email,
         form.name,
@@ -47,9 +51,23 @@ VALUES ($1, $2, $3, $4)
     .map_err(|e| {
         tracing::error!("Failed to execute query: {:?}", e);
         e
-        // Using the `?` operator to return early
-        // if the function failed, returning a sqlx::Error
-        // We will talk about error handling in depth later!
     })?;
     Ok(())
+}
+
+pub fn is_valid_name(name: &str) -> bool {
+    let not_empty_or_whitespace = name.trim().is_empty();
+    if not_empty_or_whitespace {
+        return false;
+    }
+    let name_too_long = name.graphemes(true).count() > 256;
+    if name_too_long {
+        return false;
+    }
+    let forbidden_characters = ['/', '{', '}', '\\', '(', ')', '<', '>', '*'];
+    let name_contains_bad_chars = name.chars().any(|c| forbidden_characters.contains(&c));
+    if name_contains_bad_chars {
+        return false;
+    }
+    true
 }
