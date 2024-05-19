@@ -113,7 +113,8 @@ async fn subscribe_returns_a_400_when_data_is_missing_or_bad() {
         ("name=le%20guin", "missing the email"),
         ("email=ursula_le_guin%40gmail.com", "missing the name"),
         ("", "missing both name and email"),
-        //        ("name=&email=ursula_le_guin%40gmail.com", "empty name"),
+        ("name=&email=ursula_le_guin%40gmail.com", "empty name"),
+        ("name=//&email=ursula_le_guin%40gmail.com", "bad name"),
         //       ("name=le%20name&email=", "empty email"),
         //       ("name=le%20name&email=kool dud", "bad email"),
     ];
