@@ -35,4 +35,14 @@ mod tests {
         let email = "@domain.com".to_string();
         assert_err!(SubscriberEmail::parse(email));
     }
+    #[test]
+    fn nice_email() {
+        let email = "man@domain.com".to_string();
+
+        let parsed_email = match SubscriberEmail::parse(email) {
+            Ok(pe) => pe,
+            Err(_) => panic!(),
+        };
+        assert_eq!(parsed_email.as_ref(), &"man@domain.com".to_string());
+    }
 }
