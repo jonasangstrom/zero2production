@@ -23,21 +23,21 @@ subscriber_name = %form.name
 )
 )]
 pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
-    let name = match SubscriberName::parse(form.0.name) {
-        Ok(name) => name,
+    let new_sunscriber = match parse_subscriber(form.0) {
+        Ok(sub) => sub,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
-
-    let email = match SubscriberEmail::parse(form.0.email) {
-        Ok(name) => name,
-        Err(_) => return HttpResponse::BadRequest().finish(),
-    };
-
-    let new_sunscriber = NewSubscriber { email, name };
     match insert_subscriber(&pool, &new_sunscriber).await {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
+}
+
+fn parse_subscriber(form_data: FormData) -> Result<NewSubscriber, String> {
+    let name = SubscriberName::parse(form_data.name)?;
+    let email = SubscriberEmail::parse(form_data.email)?;
+    let new_sunscriber = NewSubscriber { email, name };
+    Ok(new_sunscriber)
 }
 
 #[tracing::instrument(
