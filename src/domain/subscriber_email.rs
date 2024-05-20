@@ -37,6 +37,8 @@ mod tests {
         let email = "@domain.com".to_string();
         assert_err!(SubscriberEmail::parse(email));
     }
+    struct ValidEmailFixture(pub String);
+    //impl quicheck::Arbitrary {}
     #[test]
     fn nice_email() {
         let email: String = SafeEmail().fake();
