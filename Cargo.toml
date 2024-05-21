@@ -15,7 +15,6 @@ name = "zero2prod"
 [dependencies]
 actix-web = "4"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-reqwest = "0.11"
 serde = {version = "1", features = ["derive"]}
 config = "0.13"
 uuid = { version = "1", features = ["v4"] }
@@ -28,6 +27,11 @@ secrecy = {version = "0.8", features=["serde"]}
 tracing-actix-web = "0.7"
 unicode-segmentation = "1"
 validator = "0.16"
+
+[dependencies.reqwest]
+version = "0.11"
+default-features = false
+features = ["json", "rustls-tls"]
 
 [dev-dependencies]
 fake = "~2.3"
