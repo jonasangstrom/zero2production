@@ -8,7 +8,7 @@ pub struct EmailClient {
 }
 
 impl EmailClient {
-    pub fn new(base_url: String, sender: SubscriberEmail) -> Self {
+    pub fn new(sender: SubscriberEmail, base_url: String) -> Self {
         Self {
             sender,
             base_url,
